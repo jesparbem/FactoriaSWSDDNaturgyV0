@@ -1,0 +1,41 @@
+# Snapshots y duplicados antiguos
+old Delete/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude / local
+.claude/
+*.local
+
+# Secretos (defensa en profundidad — nunca debería haberlos, pero por si acaso)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.json
+
+# Logs y temporales
+*.log
+.cache/
+tmp/
+.tmp/
+
+# Dependencias y build (cuando se generen proyectos)
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
