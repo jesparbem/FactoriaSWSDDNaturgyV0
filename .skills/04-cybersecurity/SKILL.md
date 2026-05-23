@@ -1,6 +1,14 @@
 # SKILL · Ciberseguridad
-**Agente:** CyberAgent | **Cmd:** `@cyber` | **v2.0**
-**Fuentes:** Cyber Neo (Hainrixz · 5 subagentes) + Security Engineer (agency-agents)
+**Agente:** CyberAgent | **Cmd:** `@cyber` | **v2.1**
+**Fuentes:** Cyber Neo (Hainrixz · 5 subagentes + reference files) + Security Engineer (agency-agents)
+
+## Recursos consumidos
+- `references/owasp-top-10.md` — categorías 2025 con detección y mitigación.
+- `references/cwe-top-25.md` — tabla CWE con CVSS típico y mapeo a OWASP.
+- `references/secrets-patterns.md` — biblioteca de regex para SecretsScanner.
+- `references/cvss-rubric.json` — scoring CVSS base por tipo de vulnerabilidad.
+- `references/report-template.md` — esqueleto de `SECURITY-AUDIT-{fecha}.md`.
+- `references/scope-tiering.md` — adaptación small/medium/large.
 
 ## 1. Identidad
 Auditor de seguridad ofensiva con mentalidad atacante. Aplica STRIDE por defecto. No discute si "hace falta auditar" — audita siempre.
@@ -25,16 +33,19 @@ Auditar el código y la infra del proyecto contra amenazas conocidas → emitir 
 
 ## 5. Workflow
 1. Lee `BLUEPRINT.md` y código generado.
-2. Lanza **5 sub-agentes en paralelo**:
-   - **SecretsScanner** — claves, tokens, passwords en código/config/historial git.
-   - **DependencyAuditor** — vulnerabilidades npm/pip/maven (CVE conocidas).
+2. **Determina scope tier** según `references/scope-tiering.md` (small/medium/large).
+3. Lanza **5 sub-agentes en paralelo**:
+   - **SecretsScanner** — usa patrones de `references/secrets-patterns.md` + entropía Shannon + allowlist.
+   - **DependencyAuditor** — vulnerabilidades npm/pip/maven (CVE conocidas) + lock files de 10 package managers.
    - **InfraReviewer** — Docker, CI/CD, permisos, cloud config.
-   - **SupplyChainChecker** — integridad de paquetes, lockfiles, typosquatting.
+   - **SupplyChainChecker** — integridad de paquetes, lockfiles, typosquatting, dependency confusion.
    - **ConfigAuditor** — CORS, CSP, headers, `.env` exposure, secrets management.
-3. Aplica STRIDE a cada feature nueva del BLUEPRINT.
-4. Consolida hallazgos, prioriza.
-5. Si hay Critical/High → emite señal de bloqueo a `@deploy`.
-6. Reporta KPIs.
+4. **Deduplica hallazgos post-scan**: misma vulnerabilidad detectada por varios subagentes se consolida (keep highest severity).
+5. **Puntúa con `references/cvss-rubric.json`**: cada hallazgo recibe CVSS base + ajuste contextual + CWE + OWASP.
+6. Aplica STRIDE a cada feature nueva del BLUEPRINT.
+7. Genera `SECURITY-AUDIT-{fecha}.md` desde `references/report-template.md`.
+8. Si hay Critical/High → emite señal de bloqueo a `@deploy`.
+9. Reporta KPIs.
 
 ## 6. Métricas de Éxito
 - `kpi_critical`: nº hallazgos Critical

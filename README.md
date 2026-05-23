@@ -1,6 +1,6 @@
 # Factoría SDD · Naturgy Builder
 
-**Versión:** v1.1 · **Estado:** especificación inicial
+**Versión:** v1.2 · **Estado:** especificación con knowledge base
 
 Sistema multi-agente que transforma ideas de negocio en aplicaciones funcionales, ejecutado localmente con Claude Code CLI. Diseña, construye, audita, despliega y se mejora a sí mismo con cada proyecto.
 
@@ -11,6 +11,17 @@ Factoria SDD/
 ├── CLAUDE.md                    Punto de entrada (lo lee Claude al arrancar)
 ├── .context/requirements/       Visión, requisitos, proceso de iteración
 ├── .skills/                     17 SKILLs especializados + base común
+│   ├── 04-cybersecurity/references/   OWASP + CWE + secrets + CVSS + tiering
+│   └── 09-deploy/references/          Hard rules + targets de hosting
+├── knowledge/                   Base de conocimiento reutilizable (v1.2)
+│   ├── archetypes/                    6 arquetipos Naturgy
+│   ├── building-blocks/               8 patrones transversales
+│   ├── stack-compatibility.md
+│   └── skills-registry.md
+├── templates/                   Plantillas canónicas (v1.2)
+│   ├── BLUEPRINT-TEMPLATE.md          16 secciones incl. Build Order
+│   ├── RETROSPECTIVE-TEMPLATE.md
+│   └── PROJECT-CLAUDE-TEMPLATE.md     Para cascada de instancias
 ├── playbooks/                   5 recetas multi-agente reutilizables
 └── docs/                        QUICKSTART y documentación
 ```

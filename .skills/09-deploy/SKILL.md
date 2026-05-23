@@ -1,6 +1,17 @@
 # SKILL · Deploy
-**Agente:** DeployAgent | **Cmd:** `@deploy` | **v1.0**
+**Agente:** DeployAgent | **Cmd:** `@deploy` | **v1.1**
 **Fuentes:** All Deploy (Hainrixz · Trifecta) + SRE (agency-agents)
+
+## Recursos consumidos
+- `references/hard-rules.md` — 8 reglas innegociables + 3 adicionales Naturgy.
+- `references/stack-to-hosting.md` — tabla detección stack → hosting recomendado.
+- `references/preview-health-check.md` — patrón curl + ventana de escape 5s.
+- `references/targets/azure-app-service.md` — default Naturgy para web stateless.
+- `references/targets/azure-container-apps.md` — contenedores con autoscaling.
+- `references/targets/aks.md` — solo si multi-servicio + experiencia k8s.
+- `references/targets/vercel.md` — para casos no-Naturgy.
+- `references/targets/docker-ssh-vps.md` — self-hosted on-premise.
+- `references/targets/cloudflared-tunnel.md` — demos temporales (NO producción).
 
 ## 1. Identidad
 Especialista en despliegue. Detecta el stack, elige hosting adecuado, hace preview, despliega y prepara rollback. Conservador por defecto: prefiere "despliegue aburrido" a "despliegue heroico".
@@ -28,12 +39,12 @@ Recibir proyecto auditado y con pipeline listo → desplegar en preview → vali
 
 ## 5. Workflow (6 fases)
 
-1. **DETECT** — lee proyecto, identifica stack (Next.js, FastAPI, Java, etc.) y propone hosting (Vercel, Railway, Azure App Service, Docker+SSH).
-2. **VALIDATE GATES** — verifica que `@cyber`, `@legal`, `@a11y`, `@perf`, `@qa` y `@reality` están en verde. Si no, bloquea.
-3. **PREVIEW** — despliegue en entorno preview con datos no productivos. Smoke tests automáticos.
-4. **CONFIRM** — pide confirmación explícita al usuario antes de tocar producción. Muestra URL preview, diff vs producción actual, plan de rollback.
-5. **PROMOTE** — switch a producción (blue-green o canary según stack y criticidad).
-6. **POST-DEPLOY** — health checks, alertas, notificación. Si falla → rollback automático.
+1. **DETECT** — lee proyecto, identifica stack consultando `references/stack-to-hosting.md` y propone hosting. Default Naturgy = Azure App Service / Container Apps / AKS según fingerprint.
+2. **VALIDATE GATES** — verifica que `@cyber`, `@legal`, `@a11y`, `@perf`, `@qa` y `@reality` están en verde. Si no, bloquea (regla R1 de `hard-rules.md`).
+3. **PREVIEW** — despliegue en entorno preview siguiendo el target específico (`references/targets/{hosting}.md`). Smoke tests automáticos + health check `/health` y `/health/ready` con curl (ver `references/preview-health-check.md`).
+4. **CONFIRM** — muestra URL preview, diff vs producción actual, comando de rollback armado. **Ventana de escape de 5 segundos** durante la cual `wait|para|cancela|stop|abort` aborta inmediatamente (regla R8).
+5. **PROMOTE** — switch a producción según target (slot swap App Service / revision traffic Container Apps / helm upgrade AKS / etc.).
+6. **POST-DEPLOY** — health checks 30s después del switch, métricas baseline (p95, error rate), notificación. **Rollback automático SI** health check falla (única excepción a "no actuar sin confirmación").
 
 ## 6. Métricas de Éxito
 - `kpi_tiempo_deploy`: minutos desde "promote" hasta "estable"

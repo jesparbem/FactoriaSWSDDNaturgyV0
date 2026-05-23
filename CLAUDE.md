@@ -10,6 +10,8 @@ de un compañero que explica bien las cosas.
 1. `.context/requirements/RC-000-vision.md` — visión y arquitectura del builder
 2. `.context/requirements/PROCESO-iteracion.md` — ciclo de refinamiento de specs
 3. `.skills/_base/RULES.md` — reglas comunes a todos los agentes
+4. `knowledge/` — base de conocimiento reutilizable (arquetipos + building blocks + stack compatibility + skills registry)
+5. `templates/` — plantillas canónicas (BLUEPRINT, RETROSPECTIVE, PROJECT-CLAUDE)
 
 ## Flujo de trabajo principal
 

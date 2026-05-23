@@ -223,6 +223,7 @@ Auto-mejora:  SelfImproveAgent + retrospectivas automáticas
 
 ```
 naturgy-builder/
+├── README.md                          ← Resumen + 17 SKILLs + 5 playbooks
 ├── CLAUDE.md                          ← Punto de entrada del CLI
 ├── .context/
 │   ├── requirements/
@@ -234,38 +235,68 @@ naturgy-builder/
 │   ├── 01-architect/SKILL.md
 │   ├── 02-frontend/SKILL.md
 │   ├── 03-backend/SKILL.md
-│   ├── 04-cybersecurity/SKILL.md
+│   ├── 04-cybersecurity/
+│   │   ├── SKILL.md
+│   │   └── references/                ← Nuevo v1.2 (Cyber Neo)
+│   │       ├── owasp-top-10.md
+│   │       ├── cwe-top-25.md
+│   │       ├── secrets-patterns.md
+│   │       ├── cvss-rubric.json
+│   │       ├── report-template.md
+│   │       └── scope-tiering.md
 │   ├── 05-ux/SKILL.md
 │   ├── 06-qa/SKILL.md
 │   ├── 07-devops/SKILL.md
 │   ├── 08-data/SKILL.md
-│   ├── 09-deploy/SKILL.md
+│   ├── 09-deploy/
+│   │   ├── SKILL.md
+│   │   └── references/                ← Nuevo v1.2 (All Deploy)
+│   │       ├── hard-rules.md
+│   │       ├── stack-to-hosting.md
+│   │       ├── preview-health-check.md
+│   │       └── targets/{6 hostings}.md
 │   ├── 10-orchestrator/SKILL.md
 │   ├── 11-self-improve/SKILL.md
-│   ├── 12-legal-compliance/SKILL.md   ← Nuevo v1.1
-│   ├── 13-code-reviewer/SKILL.md      ← Nuevo v1.1
-│   ├── 14-a11y-auditor/SKILL.md       ← Nuevo v1.1
-│   ├── 15-incident-response/SKILL.md  ← Nuevo v1.1
-│   ├── 16-reality-checker/SKILL.md    ← Nuevo v1.1
-│   ├── 17-performance/SKILL.md        ← Nuevo v1.1
+│   ├── 12-legal-compliance/SKILL.md   ← v1.1
+│   ├── 13-code-reviewer/SKILL.md      ← v1.1
+│   ├── 14-a11y-auditor/SKILL.md       ← v1.1
+│   ├── 15-incident-response/SKILL.md  ← v1.1
+│   ├── 16-reality-checker/SKILL.md    ← v1.1
+│   ├── 17-performance/SKILL.md        ← v1.1
 │   └── _base/                         ← Reglas comunes a todos
 │       ├── RULES.md
 │       └── SKILL-TEMPLATE.md          ← Plantilla 7-bloques
-├── playbooks/                         ← Nuevo v1.1: recetas multi-agente
+├── knowledge/                         ← Nuevo v1.2: base de conocimiento
+│   ├── archetypes/                    ← 6 arquetipos Naturgy
+│   │   ├── app-interna-corporativa.md
+│   │   ├── dashboard-bi.md
+│   │   ├── integracion-sap.md
+│   │   ├── portal-cliente.md
+│   │   ├── automatizacion-etl.md
+│   │   └── app-movil-corporativa.md
+│   ├── building-blocks/               ← 8 patrones transversales
+│   │   ├── auth-patterns.md
+│   │   ├── database-patterns.md
+│   │   ├── deployment-patterns.md
+│   │   ├── api-design-patterns.md
+│   │   ├── frontend-stacks.md
+│   │   ├── testing-patterns.md
+│   │   ├── styling-systems.md
+│   │   └── state-management.md
+│   ├── stack-compatibility.md         ← Matriz tech stack
+│   └── skills-registry.md             ← Sección BLUEPRINT → SKILL
+├── templates/                         ← Nuevo v1.2: plantillas canónicas
+│   ├── BLUEPRINT-TEMPLATE.md          ← 16 secciones incl. Build Order
+│   ├── RETROSPECTIVE-TEMPLATE.md
+│   └── PROJECT-CLAUDE-TEMPLATE.md     ← Cascada de instancias
+├── playbooks/                         ← v1.1: recetas multi-agente
 │   ├── prototipo-rapido.md
 │   ├── feature-empresarial.md
 │   ├── auditoria-360.md
 │   ├── migracion-legacy.md
 │   └── incidente-produccion.md
-├── hooks/
-│   ├── pre-build.md
-│   ├── post-audit.md
-│   └── pre-deploy.md
-├── mcp/
-│   └── README.md                      ← Conexiones MCP disponibles
-├── templates/
-│   ├── BLUEPRINT-TEMPLATE.md          ← Template del blueprint
-│   └── RETROSPECTIVE-TEMPLATE.md      ← Template de retro
+├── hooks/                             ← Pendiente
+├── mcp/                               ← Pendiente
 └── docs/
     └── QUICKSTART.md                  ← Guía de arranque rápido
 ```
