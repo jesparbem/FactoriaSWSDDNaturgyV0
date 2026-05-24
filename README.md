@@ -1,8 +1,14 @@
-# Factoría SDD · Naturgy Builder
+# FactorIA 2.0 · Builder SW Naturgy
 
-**Versión:** v1.3 · **Estado:** especificación + webapp funcional
+**Versión:** v2.0 · **Estado:** webapp funcional + 18 agentes + canvas de aprobaciones
 
-> **Novedad v1.3:** webapp Next.js en `webapp/` con 8 páginas (Dashboard, Procesos, Builder live, Módulos, Agentes, Prototyping, Costes, Auto-mejora).
+> **Novedades v2.0:**
+> - **Canvas de aprobaciones por rol**: las specs se trocean en funcionalidades aprobables por separado (PO / DO / PrO / Compliance) antes de entrar en construcción
+> - **Editor y creador de agentes**: edita los 7 bloques de cualquier SKILL con preview live · crea nuevos manualmente o con `@skill-creator` (wizard conversacional)
+> - **@skill-creator** (meta-agente #18): te entrevista en 5 preguntas con dictado por voz y genera el borrador del SKILL.md
+> - **Rapid Prototyping funcional**: mockups reales por arquetipo con previewer móvil/tablet/desktop
+> - **Dictado por voz** (Web Speech API), persistencia de tema, toasts, polling en vivo del enjambre
+>
 > Arranque: `cd webapp && npm install && npm run dev` → http://localhost:3030
 
 Sistema multi-agente que transforma ideas de negocio en aplicaciones funcionales, ejecutado localmente con Claude Code CLI. Diseña, construye, audita, despliega y se mejora a sí mismo con cada proyecto.

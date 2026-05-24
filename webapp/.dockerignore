@@ -1,0 +1,35 @@
+# Dependencias y artefactos de build (se regeneran dentro de la imagen)
+node_modules
+.next
+out
+dist
+build
+
+# Local / IDE
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Logs y temporales
+npm-debug.log*
+yarn-debug.log*
+.npm
+.cache
+
+# Entornos (los secretos se inyectan vía Container Apps env-vars / Key Vault)
+.env
+.env.*
+!.env.example
+
+# Tests y docs no se necesitan en imagen final
+README.md
+*.md
+__tests__
+__mocks__
+coverage
+
+# Snapshots viejos del repo raíz (por si el contexto de build incluye más arriba)
+old\ Delete

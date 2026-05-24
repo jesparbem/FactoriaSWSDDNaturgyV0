@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Workflow, Boxes, Bot, Cpu, Sparkles,
-  Coins, TrendingUp, Settings, Zap, Users,
+  Coins, Settings, Zap, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -102,9 +102,9 @@ export function Sidebar() {
           <span>Configuración</span>
         </Link>
         <div className="mt-3 px-2 text-[11px] text-muted-fg leading-relaxed">
-          <span className="font-semibold text-fg">FactorIA 2.0</span> · v1.4
+          <span className="font-semibold text-fg">FactorIA 2.0</span> · v2.0
           <br />
-          17 agentes · 4 roles · ADAI · GitHub · AKS · AI Foundry
+          18 agentes · 4 roles · ADAI · GitHub · AKS · AI Foundry
         </div>
       </div>
     </aside>

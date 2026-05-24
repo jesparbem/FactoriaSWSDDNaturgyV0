@@ -1,6 +1,8 @@
-# Factoría SDD · Webapp
+# FactorIA 2.0 · Builder SW Naturgy
 
 Interfaz web de la plataforma agéntica Naturgy. Built with **Next.js 14 (App Router) + TypeScript + Tailwind CSS**.
+
+**Versión:** v2.0 · 18 agentes · 11 rutas + 1 API
 
 ## Arranque
 
@@ -17,13 +19,16 @@ App en `http://localhost:3030`.
 | Ruta | Descripción |
 |---|---|
 | `/` | **Dashboard** — KPIs, módulos en construcción, actividad live, vista por rol |
-| `/procesos` | **Procesos de Negocio** — 3 vías de extracción de specs (extracción / vibe coding / proceso detallado), OpenSpec YAML, dictado por voz |
-| `/builder` | **Builder · Enjambre** — diagrama ADAI→GitHub→AKS→AI Foundry · pods en vivo · stream JSON · guardarrailes |
+| `/equipo` | **Equipo** — los 4 roles del modelo (Process / Domain / Product Owner + Technology Enabler) en 3 vistas: Matriz, Tarjetas e Interacciones |
+| `/procesos` | **Procesos de Negocio** — 3 vías de extracción de specs (extracción / vibe coding / proceso detallado) + **canvas de aprobaciones** que trocea la spec en funcionalidades aprobables por cada rol |
+| `/builder` | **Builder · Enjambre** — diagrama ADAI→GitHub→AKS→AI Foundry · pods en vivo con polling cada 3s · stream JSON · guardarrailes |
 | `/modulos` | **Módulos** — catálogo filtrable por fase SDLC con PO, Domain Owner, agentes activos y coste |
-| `/agentes` | **Agentes IA** — los 17 SKILLs con KPIs, sub-agentes, coste por llamada y duración media |
-| `/prototyping` | **Rapid Prototyping (Vibe Coding)** — generación rápida de prototipos + flujo de promoción a módulo productivo |
+| `/agentes` | **Agentes IA** — los 18 SKILLs con KPIs, sub-agentes, coste por llamada · botón **Editar SKILL** abre formulario completo de los 7 bloques con preview live |
+| `/agentes/nuevo` | **Crear agente** — 2 modos: manual (SkillEditor con plantilla vacía) o asistido por `@skill-creator` (wizard conversacional de 5 preguntas con dictado por voz) |
+| `/prototyping` | **Rapid Prototyping (Vibe Coding)** — generación rápida con preview navegable en móvil/tablet/desktop, mockups por arquetipo, flujo de promoción a módulo productivo |
 | `/costes` | **Costes** — timeline 7 días, por agente, por módulo, cuotas Azure AI Foundry por equipo |
-| `/mejora` | **Auto-mejora** — sugerencias de mejora detectadas por @self-improve con feedback y votación |
+| `/mejora` | **Auto-mejora** — sugerencias detectadas por @self-improve con feedback, votación y aprobación humana |
+| `/api/swarm` | **API dinámica** — devuelve eventos vivos del enjambre (pods, stream, summary) |
 
 ## Decisiones de diseño
 
