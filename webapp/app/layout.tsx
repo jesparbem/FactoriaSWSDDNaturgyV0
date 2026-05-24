@@ -5,9 +5,9 @@ import { Topbar } from "@/components/layout/Topbar";
 import { ToastProvider } from "@/components/ToastProvider";
 
 export const metadata: Metadata = {
-  title: "Factoría SDD · Naturgy",
+  title: "FactorIA 2.0 · Builder SW Naturgy",
   description:
-    "Plataforma agéntica para construir software con IA. De la idea al despliegue, con 17 agentes especializados.",
+    "Plataforma agéntica para construir software con IA en Naturgy. De la idea al despliegue, con 17 agentes especializados y guardarrailes corporativos.",
   icons: { icon: "/favicon.svg" },
 };
 

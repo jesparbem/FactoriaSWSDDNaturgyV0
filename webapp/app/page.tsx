@@ -35,7 +35,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <h1 className="text-3xl lg:text-4xl font-bold leading-tight">
-                Hola, Jesús. La <span className="text-gradient-orange">Factoría</span> está construyendo {activeModules.length} módulos en este momento.
+                Hola, Jesús. <span className="text-gradient-orange">FactorIA 2.0</span> está construyendo {activeModules.length} módulos en este momento.
               </h1>
               <p className="text-muted-fg text-base">
                 17 agentes especializados, 4 roles, una plataforma. De la idea al despliegue en producción con

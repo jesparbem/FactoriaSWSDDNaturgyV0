@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { SPECS_EXTRACTION_METHODS } from "@/lib/data";
 import { VoiceInput } from "@/components/VoiceInput";
 import { useToast } from "@/components/ToastProvider";
+import { FeatureCanvas } from "@/components/FeatureCanvas";
 
 const iconMap = { Search, Paintbrush, Users } as const;
 
@@ -135,8 +136,9 @@ export default function ProcesosPage() {
 
 // --- Flow 3: Process detailed + AI (con dictado) ---
 function ProcessDetailedFlow({ step, setStep, onBack }: { step: number; setStep: (n: number) => void; onBack: () => void }) {
-  const steps = ["Describe", "IA analiza", "Specs extraídas", "Mapeo a entidades"];
+  const steps = ["Describe", "IA analiza", "Canvas de aprobaciones", "Construcción"];
   const [text, setText] = useState("");
+  const [showYaml, setShowYaml] = useState(false);
   const toast = useToast();
   return (
     <Card>
@@ -234,16 +236,33 @@ function ProcessDetailedFlow({ step, setStep, onBack }: { step: number; setStep:
         {step === 2 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <Badge variant="primary">spec.functional.yaml</Badge>
-                <Badge variant="ghost">v0.1 · borrador</Badge>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="primary">SPEC-2026-0142</Badge>
+                <Badge variant="ghost">v0.1 · 6 funcionalidades extraídas</Badge>
                 <Badge variant="success">@reality PASS</Badge>
               </div>
-              <Button variant="secondary" size="sm">
-                <FileCode2 className="w-3.5 h-3.5" /> Ver en GitHub
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" onClick={() => setShowYaml((s) => !s)}>
+                  <FileCode2 className="w-3.5 h-3.5" /> {showYaml ? "Ocultar YAML" : "Ver YAML"}
+                </Button>
+                <Button variant="secondary" size="sm">
+                  <ArrowRight className="w-3.5 h-3.5" /> Ver en GitHub
+                </Button>
+              </div>
             </div>
-            <pre className="rounded-lg border border-border bg-bg p-4 overflow-x-auto text-xs font-mono leading-relaxed">
+
+            <p className="text-sm text-muted-fg">
+              La IA ha troceado tu proceso en funcionalidades aprobables por separado. Cada tarjeta necesita el visto
+              bueno de los roles correspondientes (Process Owner / Domain Owner / Product Owner / Compliance) antes
+              de entrar en construcción. Puedes aprobar, pedir cambios o rechazar cada una.
+            </p>
+
+            {showYaml && (
+              <details open className="rounded-lg border border-border bg-bg overflow-hidden animate-fade-in">
+                <summary className="cursor-pointer text-xs font-mono px-3 py-2 bg-muted border-b border-border">
+                  spec.functional.yaml · auto-generado
+                </summary>
+                <pre className="p-4 overflow-x-auto text-[11px] font-mono leading-relaxed">
 {`spec_id: SPEC-2026-0142
 spec_version: 0.1.0
 title: Aprobaciones de compras > 50k€
@@ -251,55 +270,35 @@ archetype: app-interna-corporativa
 domain: procurement
 process_owner: marta.l@naturgy.com
 
-actors:
-  - solicitante (cualquier empleado)
-  - jefe_directo
-  - responsable_presupuesto
-  - compliance (si importe > 10k€)
-
-entities:
-  - SolicitudCompra:
-      fields: [id, solicitante_id, descripcion, importe, estado, created_at]
-      states: [draft, pending_jefe, pending_presupuesto, pending_compliance, approved, rejected, sent_to_sap]
-  - Aprobacion:
-      fields: [id, solicitud_id, aprobador_id, decision, comentario, ts]
-  - PedidoSAP:
-      fields: [id, solicitud_id, sap_pedido_id, ts_enviado]
-
-integrations:
-  - sap_mm:
-      type: rest
-      endpoint: $\{SAP_BTP_URL}/api/mm/v1/pedidos
-      auth: oauth2_client_credentials
-  - azure_ad:
-      type: oidc
-      groups: [naturgy.empleados, naturgy.jefes, naturgy.compliance]
-
-flows:
-  - submit_request
-  - approve_step
-  - sync_to_sap
+actors: [solicitante, jefe_directo, responsable_presupuesto, compliance]
+entities: [SolicitudCompra, Aprobacion, PedidoSAP]
+integrations: [sap_mm (oauth2), azure_ad (oidc), teams_api]
+features: 6
+estimated_cost_eur: 203
+estimated_hours: 64
 
 acceptance_criteria:
   - "Solicitudes > 10k€ requieren compliance"
   - "Aprobación SLA: 48h máx por paso"
   - "Auditoría: cada acción queda registrada"`}
-            </pre>
-            <div className="flex justify-between flex-wrap gap-2">
+                </pre>
+              </details>
+            )}
+
+            <FeatureCanvas
+              onSubmit={() => {
+                setStep(3);
+                toast({
+                  kind: "success",
+                  title: "Specs publicadas en GitHub",
+                  description: "SPEC-2026-0142 → repo specs-platform · enjambre AKS lanzado · 6 pods en cola",
+                });
+              }}
+            />
+
+            <div className="flex justify-start">
               <Button variant="secondary" onClick={() => setStep(0)}>
                 ← Editar proceso
-              </Button>
-              <Button
-                onClick={() => {
-                  setStep(3);
-                  toast({
-                    kind: "success",
-                    title: "Specs publicadas en GitHub",
-                    description: "SPEC-2026-0142 versionada · evento spec.ready enviado al orquestador",
-                  });
-                }}
-              >
-                Continuar al mapeo de entidades <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -310,17 +309,20 @@ acceptance_criteria:
             <div className="w-16 h-16 rounded-2xl bg-naturgy-success/20 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-8 h-8 text-naturgy-success" />
             </div>
-            <h3 className="text-lg font-semibold">Specs publicadas en GitHub</h3>
+            <h3 className="text-lg font-semibold">¡Enviado a construcción!</h3>
             <p className="text-sm text-muted-fg max-w-md mx-auto">
-              <span className="font-mono">SPEC-2026-0142</span> versionada en{" "}
+              <span className="font-mono">SPEC-2026-0142</span> publicada en{" "}
               <span className="font-mono text-naturgy-orange-500">specs-platform/apps/aprobaciones-compras/</span>.
-              El orquestador AKS recibirá un evento <span className="font-mono">spec.ready</span> y lanzará el enjambre.
+              Las <strong className="text-fg">6 funcionalidades</strong> entran en el enjambre como pods independientes
+              en AKS. Puedes seguir el progreso en vivo desde el Builder.
             </p>
             <div className="flex justify-center gap-2 flex-wrap">
-              <Button variant="secondary">Volver a procesos</Button>
-              <Button>
-                <Activity className="w-4 h-4" /> Ver enjambre construyendo
-              </Button>
+              <Button variant="secondary" onClick={onBack}>Volver a procesos</Button>
+              <a href="/builder">
+                <Button>
+                  <Activity className="w-4 h-4" /> Ver enjambre construyendo
+                </Button>
+              </a>
             </div>
           </div>
         )}

@@ -29,7 +29,8 @@ export const ROLES: Record<Role, { label: string; color: string; description: st
 export type AgentId =
   | "architect" | "frontend" | "backend" | "cyber" | "ux" | "qa"
   | "devops" | "data" | "deploy" | "orchestrator" | "self-improve"
-  | "legal" | "review" | "a11y" | "incident" | "reality" | "perf";
+  | "legal" | "review" | "a11y" | "incident" | "reality" | "perf"
+  | "skill-creator";
 
 export interface Agent {
   id: AgentId;
@@ -216,7 +217,99 @@ export const AGENTS: Agent[] = [
     ],
     costPerCall: 1.65, avgDuration: 720, callsToday: 5,
   },
+  {
+    id: "skill-creator", num: "18", cmd: "@skill-creator", name: "SkillCreatorAgent",
+    domain: "Meta-agente · crea otros agentes/SKILLs", icon: "Wand2", color: "pink",
+    kpis: [
+      { name: "Skills generados", value: "4", trend: "up" },
+      { name: "Aprobación al 1er intento", value: "75%", trend: "up" },
+    ],
+    costPerCall: 1.20, avgDuration: 900, callsToday: 2,
+  },
 ];
+
+// Estructura editable de un SKILL (los 7 bloques)
+export interface SkillSpec {
+  num: string;
+  cmd: string;
+  name: string;
+  version: string;
+  sources: string;
+  identity: string;
+  mission: string;
+  criticalRules: string[];
+  deliverables: string[];
+  workflow: string[];
+  subagents?: string[];
+  kpis: { name: string; target: string }[];
+  communicationStyle: string;
+  handoffFrom: string;
+  handoffTo: string;
+  hooks: string[];
+  realityChecker: boolean;
+}
+
+// Plantilla vacía para crear un SKILL desde cero
+export const EMPTY_SKILL: SkillSpec = {
+  num: "19",
+  cmd: "@new-skill",
+  name: "NewSkillAgent",
+  version: "1.0",
+  sources: "",
+  identity: "",
+  mission: "",
+  criticalRules: [""],
+  deliverables: [""],
+  workflow: [""],
+  subagents: [],
+  kpis: [{ name: "", target: "" }],
+  communicationStyle: "",
+  handoffFrom: "",
+  handoffTo: "",
+  hooks: [],
+  realityChecker: true,
+};
+
+// Ejemplo de SKILL ya rellenado (el de @architect) para mostrar al editar
+export const ARCHITECT_SKILL_SPEC: SkillSpec = {
+  num: "01",
+  cmd: "@architect",
+  name: "ArchitectAgent",
+  version: "2.1",
+  sources: "The Architect (Hainrixz · Trifecta) + Software Architect (agency-agents)",
+  identity:
+    "Arquitecto de software senior con experiencia en sistemas regulados. Transforma ideas vagas en blueprints accionables. Pragmático: prefiere 3 opciones con trade-offs antes que una sola \"perfecta\".",
+  mission:
+    "Recibir una idea de negocio en español natural → entrevistar al usuario en 4 fases → entregar un BLUEPRINT.md de 16 secciones listo para que el resto de SKILLs construyan.",
+  criticalRules: [
+    "NUNCA genera blueprint sin confirmar: tipo de app, público, datos tratados, restricciones legales.",
+    "SIEMPRE ofrece 3 opciones con trade-offs en decisiones significativas (stack, BD, hosting).",
+    "Documenta cada decisión arquitectónica importante en .context/decisions/ADR-{n}-{slug}.md.",
+    "Prefiere arquitecturas modulares e incrementales sobre monolitos rígidos.",
+    "Si la idea involucra datos personales o sistemas regulados → consulta a @legal antes de cerrar el BLUEPRINT.",
+  ],
+  deliverables: [
+    "BLUEPRINT.md → raíz del proyecto (16 secciones)",
+    ".context/decisions/ADR-{n}-{slug}.md por cada decisión significativa.",
+  ],
+  workflow: [
+    "Fase 1 · DISCOVERY — ¿Qué? ¿Para quién? ¿Qué problema? Clasifica arquetipo.",
+    "Fase 2 · DEEP DIVE — Features core (máx 5), integraciones, restricciones.",
+    "Fase 3 · ARCHITECTURE — 3 opciones de stack con trade-offs, valida stack-compatibility.",
+    "Fase 4 · GENERATE — Rellena BLUEPRINT-TEMPLATE.md, sección 9 (Build Order) obligatoria.",
+  ],
+  kpis: [
+    { name: "kpi_secciones_completas", target: "16/16" },
+    { name: "kpi_iteraciones_blueprint", target: "< 3" },
+    { name: "kpi_adrs_generados", target: "≥ 1 por decisión significativa" },
+  ],
+  communicationStyle:
+    "Pregunta máximo 3 cosas por turno. Resume lo entendido antes de avanzar. Si detecta ambigüedad, la verbaliza.",
+  handoffFrom: "usuario (idea inicial)",
+  handoffTo: "@orchestrator (con BLUEPRINT.md aprobado)",
+  hooks: ["blueprint-approved"],
+  realityChecker: true,
+};
 
 export type SDLCPhase =
   | "spec"

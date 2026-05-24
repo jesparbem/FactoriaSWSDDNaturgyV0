@@ -33,12 +33,14 @@ export function Sidebar() {
     <aside className="w-64 border-r border-border bg-card flex flex-col shrink-0">
       {/* Logo */}
       <div className="h-16 px-6 flex items-center gap-3 border-b border-border">
-        <div className="w-9 h-9 rounded-lg gradient-orange flex items-center justify-center shrink-0">
-          <span className="text-white font-bold text-lg">N</span>
+        <div className="w-9 h-9 rounded-lg gradient-orange flex items-center justify-center shrink-0 shadow-sm">
+          <span className="text-white font-bold text-base">F</span>
         </div>
         <div className="min-w-0">
-          <div className="font-semibold leading-tight">Factoría SDD</div>
-          <div className="text-xs text-muted-fg leading-tight">Naturgy · v1.3</div>
+          <div className="font-semibold leading-tight text-sm">
+            Factor<span className="text-naturgy-orange-500">IA</span> 2.0
+          </div>
+          <div className="text-[11px] text-muted-fg leading-tight">Builder SW Naturgy</div>
         </div>
       </div>
 
@@ -100,9 +102,9 @@ export function Sidebar() {
           <span>Configuración</span>
         </Link>
         <div className="mt-3 px-2 text-[11px] text-muted-fg leading-relaxed">
-          Plataforma agéntica · 17 agentes · 4 roles
+          <span className="font-semibold text-fg">FactorIA 2.0</span> · v1.4
           <br />
-          ADAI · GitHub · AKS · AI Foundry
+          17 agentes · 4 roles · ADAI · GitHub · AKS · AI Foundry
         </div>
       </div>
     </aside>
