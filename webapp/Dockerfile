@@ -1,14 +1,15 @@
-# syntax=docker/dockerfile:1.7
 # Multi-stage build para FactorIA 2.0 (Next.js 14 standalone)
 # Tamaño final esperado: ~140 MB
+# Sin syntax= directive ni --mount=type=cache porque ACR Build clásico
+# no usa BuildKit. Compatible con Docker estándar.
 
 # --- 1. deps: solo node_modules de producción + dev necesarias para build ---
 FROM node:20-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package.json package-lock.json* ./
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --no-audit --no-fund
+# Sin --mount=type=cache porque ACR Build clásico no usa BuildKit
+RUN npm ci --no-audit --no-fund
 
 # --- 2. builder: build Next.js con output:standalone ---
 FROM node:20-alpine AS builder

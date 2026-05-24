@@ -75,9 +75,14 @@ else
     --resource-group "$RG" \
     --sku Basic \
     --location "$LOCATION" \
+    --admin-enabled true \
     --output none
-  ok "ACR creado"
+  ok "ACR creado (con admin habilitado para auth desde Container App)"
 fi
+# Asegurar admin enabled (también si el ACR ya existía)
+az acr update --name "$ACR_NAME" --admin-enabled true --output none 2>/dev/null || true
+ACR_USERNAME=$(az acr credential show --name "$ACR_NAME" --query username -o tsv)
+ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
 
 # === 3. Log Analytics Workspace ==============================================
 say "3. Log Analytics Workspace $LOG_WS..."
@@ -115,35 +120,11 @@ else
   ok "Environment creado"
 fi
 
-# === 5. Managed Identity ====================================================
-say "5. Managed Identity $IDENTITY_NAME..."
-if az identity show --name "$IDENTITY_NAME" --resource-group "$RG" --query name -o tsv >/dev/null 2>&1; then
-  ok "Identity ya existe"
-else
-  az identity create \
-    --name "$IDENTITY_NAME" \
-    --resource-group "$RG" \
-    --location "$LOCATION" \
-    --output none
-  ok "Identity creada"
-fi
-IDENTITY_ID=$(az identity show --name "$IDENTITY_NAME" -g "$RG" --query id -o tsv)
-IDENTITY_PRINCIPAL=$(az identity show --name "$IDENTITY_NAME" -g "$RG" --query principalId -o tsv)
-
-# === 6. Role assignment (AcrPull) ===========================================
-say "6. Asignando rol AcrPull a la identity..."
-ACR_ID=$(az acr show --name "$ACR_NAME" --query id -o tsv)
-if az role assignment list --assignee "$IDENTITY_PRINCIPAL" --scope "$ACR_ID" --query "[?roleDefinitionName=='AcrPull'].id" -o tsv | grep -q .; then
-  ok "Rol AcrPull ya asignado"
-else
-  az role assignment create \
-    --assignee-object-id "$IDENTITY_PRINCIPAL" \
-    --assignee-principal-type ServicePrincipal \
-    --role AcrPull \
-    --scope "$ACR_ID" \
-    --output none || warn "No se pudo asignar AcrPull (¿permisos?). Continuará con admin del ACR."
-  ok "Rol asignado"
-fi
+# === 5-6. Auth ACR vía admin credentials (más fiable en sandbox) ===========
+# En lugar de Managed Identity + role assignment (que falla por propagación
+# lenta de Graph o por falta de permisos), usamos admin del ACR.
+# Para producción real usar Managed Identity + AcrPull explícito.
+ok "Saltando Managed Identity · usaremos admin del ACR (sandbox)"
 
 # === 7. Build de la imagen (en cloud, sin Docker local) =====================
 say "7. Construyendo imagen en ACR (az acr build)... ~3-5 min"
@@ -183,8 +164,8 @@ else
     --cpu 0.5 \
     --memory 1Gi \
     --registry-server "${ACR_NAME}.azurecr.io" \
-    --registry-identity "$IDENTITY_ID" \
-    --user-assigned "$IDENTITY_ID" \
+    --registry-username "$ACR_USERNAME" \
+    --registry-password "$ACR_PASSWORD" \
     --env-vars "NODE_ENV=production" "NEXT_TELEMETRY_DISABLED=1" "PORT=3000" \
     --output none
   ok "Container App creada"
