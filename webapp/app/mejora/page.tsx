@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Sparkles, ArrowUp, ArrowDown, MessageSquare, CheckCircle2, X,
-  TrendingUp, Lightbulb, Send, ChevronRight,
+  TrendingUp, Lightbulb, Send, ChevronRight, Heart, History,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -11,6 +11,11 @@ import { Button } from "@/components/ui/Button";
 import { SUGGESTIONS, ROLES } from "@/lib/data";
 import { VoiceInput } from "@/components/VoiceInput";
 import { useToast } from "@/components/ToastProvider";
+import {
+  addComment, castVote, getMyVote, getStoredComments,
+  submitFeedback, getSubmittedFeedback, getEngagementStats,
+  FeedbackComment, FeedbackEntry,
+} from "@/lib/feedback";
 
 const STATUS_VARIANT = {
   proposed: "ghost",
@@ -23,7 +28,72 @@ export default function MejoraPage() {
   const [selected, setSelected] = useState<string | null>(SUGGESTIONS[0].id);
   const current = SUGGESTIONS.find((s) => s.id === selected) || SUGGESTIONS[0];
   const [feedback, setFeedback] = useState("");
+  const [newComment, setNewComment] = useState("");
+  const [myVotes, setMyVotes] = useState<Record<string, "up" | "down" | null>>({});
+  const [userComments, setUserComments] = useState<FeedbackComment[]>([]);
+  const [submittedFeedback, setSubmittedFeedback] = useState<FeedbackEntry[]>([]);
+  const [voteDeltas, setVoteDeltas] = useState<Record<string, number>>({});
+  const [engagement, setEngagement] = useState({ commentsThisDevice: 0, votesThisDevice: 0, feedbackQueued: 0 });
   const toast = useToast();
+
+  // Hidratar desde localStorage tras el primer render (evita SSR mismatch)
+  useEffect(() => {
+    setUserComments(getStoredComments());
+    setSubmittedFeedback(getSubmittedFeedback());
+    setEngagement(getEngagementStats());
+    const votes: Record<string, "up" | "down" | null> = {};
+    SUGGESTIONS.forEach((s) => { votes[s.id] = getMyVote(s.id); });
+    setMyVotes(votes);
+  }, []);
+
+  function vote(id: string, direction: "up" | "down") {
+    const prev = myVotes[id];
+    castVote(id, direction);
+    setMyVotes({ ...myVotes, [id]: direction });
+    // Delta visual sobre el contador base
+    const delta = direction === "up" ? 1 : -1;
+    const prevDelta = prev === "up" ? 1 : prev === "down" ? -1 : 0;
+    setVoteDeltas({ ...voteDeltas, [id]: (voteDeltas[id] || 0) + delta - prevDelta });
+    setEngagement(getEngagementStats());
+    toast({
+      kind: direction === "up" ? "success" : "info",
+      title: direction === "up" ? "Voto a favor registrado" : "Voto en contra registrado",
+      description: prev && prev !== direction ? "Cambiado · gracias por tu segunda lectura" : "Sumado al feedback del @self-improve",
+    });
+  }
+
+  function postComment() {
+    if (!newComment.trim() || !current) return;
+    const entry = addComment({
+      suggestionId: current.id,
+      text: newComment.trim(),
+      author: "Jesús E.",
+      role: "product-owner",
+    });
+    setUserComments([...userComments, entry]);
+    setNewComment("");
+    setEngagement(getEngagementStats());
+    toast({
+      kind: "success",
+      title: "Gracias por tu comentario",
+      description: "@self-improve lo añadirá al análisis de patrones del próximo ciclo",
+    });
+  }
+
+  function postFeedback() {
+    if (!feedback.trim()) return;
+    const entry = submitFeedback(feedback.trim());
+    setSubmittedFeedback([entry, ...submittedFeedback]);
+    setFeedback("");
+    setEngagement(getEngagementStats());
+    toast({
+      kind: "success",
+      title: "Idea enviada al backlog",
+      description: `Estará disponible en el próximo análisis · ID ${entry.id}`,
+    });
+  }
+
+  const commentsForCurrent = userComments.filter((c) => c.suggestionId === current.id);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -65,6 +135,26 @@ export default function MejoraPage() {
         ))}
       </div>
 
+      {/* Tu engagement personal (basado en localStorage de este dispositivo) */}
+      {(engagement.votesThisDevice > 0 || engagement.commentsThisDevice > 0 || engagement.feedbackQueued > 0) && (
+        <div className="rounded-xl border border-naturgy-orange-500/30 bg-naturgy-orange-500/5 px-4 py-3 flex items-center justify-between flex-wrap gap-3 animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-naturgy-orange-500/20 flex items-center justify-center">
+              <Heart className="w-4 h-4 text-naturgy-orange-500" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold">Gracias por contribuir, Jesús</div>
+              <div className="text-[11px] text-muted-fg">
+                Has aportado <strong className="text-fg">{engagement.votesThisDevice}</strong> votos ·{" "}
+                <strong className="text-fg">{engagement.commentsThisDevice}</strong> comentarios ·{" "}
+                <strong className="text-fg">{engagement.feedbackQueued}</strong> ideas en cola
+              </div>
+            </div>
+          </div>
+          <Badge variant="primary" className="font-mono"><Sparkles className="w-3 h-3" /> @self-improve te ha leído</Badge>
+        </div>
+      )}
+
       <div className="grid lg:grid-cols-3 gap-6">
         {/* List */}
         <div className="space-y-3">
@@ -86,9 +176,18 @@ export default function MejoraPage() {
               <h3 className="font-semibold text-sm leading-snug">{s.title}</h3>
               <div className="mt-3 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2 text-muted-fg">
-                  <span className="flex items-center gap-1"><ArrowUp className="w-3 h-3 text-naturgy-success" />{s.votes.up}</span>
-                  <span className="flex items-center gap-1"><ArrowDown className="w-3 h-3" />{s.votes.down}</span>
-                  <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" />{s.comments.length}</span>
+                  <span className="flex items-center gap-1">
+                    <ArrowUp className={`w-3 h-3 ${myVotes[s.id] === "up" ? "text-naturgy-success" : "text-naturgy-success/50"}`} />
+                    {s.votes.up + (myVotes[s.id] === "up" ? 1 : 0)}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <ArrowDown className={`w-3 h-3 ${myVotes[s.id] === "down" ? "text-naturgy-danger" : ""}`} />
+                    {s.votes.down + (myVotes[s.id] === "down" ? 1 : 0)}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MessageSquare className="w-3 h-3" />
+                    {s.comments.length + userComments.filter((c) => c.suggestionId === s.id).length}
+                  </span>
                 </div>
                 <span className="text-naturgy-orange-500 font-mono text-[10px]">{s.expectedDelta}</span>
               </div>
@@ -111,18 +210,7 @@ export default function MejoraPage() {
             />
             <div className="flex justify-between mt-2">
               <VoiceInput value={feedback} onChange={setFeedback} size="sm" title="Dictar feedback" />
-              <Button
-                size="sm"
-                disabled={!feedback.trim()}
-                onClick={() => {
-                  toast({
-                    kind: "success",
-                    title: "Feedback enviado",
-                    description: "@self-improve lo cruzará con histórico y propondrá una sugerencia si encaja",
-                  });
-                  setFeedback("");
-                }}
-              >
+              <Button size="sm" disabled={!feedback.trim()} onClick={postFeedback}>
                 <Send className="w-3 h-3" /> Enviar
               </Button>
             </div>
@@ -220,12 +308,33 @@ export default function MejoraPage() {
                 </div>
               </div>
 
-              {/* Comentarios */}
+              {/* Comentarios + votación */}
               <div>
                 <h4 className="text-xs font-semibold uppercase text-muted-fg mb-2 flex items-center justify-between">
                   Comentarios de la organización
-                  <span className="font-normal text-[11px]">
-                    👍 {current.votes.up} · 👎 {current.votes.down}
+                  <span className="flex items-center gap-2 font-normal">
+                    <button
+                      onClick={() => vote(current.id, "up")}
+                      className={`flex items-center gap-1 px-2 py-0.5 rounded transition-all ${
+                        myVotes[current.id] === "up"
+                          ? "bg-naturgy-success/20 text-naturgy-success"
+                          : "hover:bg-naturgy-success/10 text-muted-fg"
+                      }`}
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                      {current.votes.up + (myVotes[current.id] === "up" ? 1 : 0)}
+                    </button>
+                    <button
+                      onClick={() => vote(current.id, "down")}
+                      className={`flex items-center gap-1 px-2 py-0.5 rounded transition-all ${
+                        myVotes[current.id] === "down"
+                          ? "bg-naturgy-danger/20 text-naturgy-danger"
+                          : "hover:bg-naturgy-danger/10 text-muted-fg"
+                      }`}
+                    >
+                      <ArrowDown className="w-3 h-3" />
+                      {current.votes.down + (myVotes[current.id] === "down" ? 1 : 0)}
+                    </button>
                   </span>
                 </h4>
                 <div className="space-y-2">
@@ -246,13 +355,31 @@ export default function MejoraPage() {
                     );
                   })}
 
+                  {/* Comentarios añadidos por el usuario actual */}
+                  {commentsForCurrent.map((c) => (
+                    <div key={c.id} className="rounded-lg border border-naturgy-orange-500/40 bg-naturgy-orange-500/5 p-3 animate-fade-in">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-6 h-6 rounded-full bg-naturgy-orange-500 text-white text-[10px] font-semibold flex items-center justify-center">
+                          {c.author.split(" ").map((w) => w[0]).join("")}
+                        </div>
+                        <span className="text-xs font-semibold">{c.author}</span>
+                        <Badge variant="primary" className="text-[10px]">tú</Badge>
+                        <span className="text-[10px] text-muted-fg ml-auto">ahora</span>
+                      </div>
+                      <p className="text-xs text-fg/90 leading-relaxed">{c.text}</p>
+                    </div>
+                  ))}
+
                   {/* New comment */}
                   <div className="flex gap-2 pt-2">
                     <input
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") postComment(); }}
                       placeholder="Aporta tu punto de vista..."
                       className="flex-1 h-9 px-3 rounded-md border border-border bg-card text-xs focus:outline-none focus:ring-1 focus:ring-ring"
                     />
-                    <Button size="sm" variant="secondary">
+                    <Button size="sm" disabled={!newComment.trim()} onClick={postComment}>
                       <Send className="w-3 h-3" />
                     </Button>
                   </div>
@@ -260,6 +387,47 @@ export default function MejoraPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Cola personal de feedback (sólo si hay alguno) */}
+          {submittedFeedback.length > 0 && (
+            <Card className="border-naturgy-orange-500/30">
+              <CardHeader>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <History className="w-4 h-4 text-naturgy-orange-500" />
+                    Tu cola de feedback ({submittedFeedback.length})
+                  </CardTitle>
+                  <Badge variant="ghost">Persistido en este navegador</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {submittedFeedback.slice(0, 5).map((f) => (
+                    <div key={f.id} className="flex items-start gap-3 p-3 rounded-lg border border-border bg-bg">
+                      <div className="w-7 h-7 rounded-full bg-naturgy-orange-500/15 text-naturgy-orange-500 flex items-center justify-center shrink-0">
+                        <Lightbulb className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-mono text-[10px] text-muted-fg">{f.id}</span>
+                          <Badge variant="warning" className="text-[10px]">{f.status}</Badge>
+                          <span className="text-[10px] text-muted-fg ml-auto">
+                            {new Date(f.ts).toLocaleString("es-ES", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        <p className="text-xs text-fg/90 leading-relaxed">{f.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {submittedFeedback.length > 5 && (
+                    <div className="text-[11px] text-muted-fg text-center pt-1">
+                      … y {submittedFeedback.length - 5} más en la cola
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Cómo funciona */}
           <Card>
