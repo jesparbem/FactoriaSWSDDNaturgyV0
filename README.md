@@ -1,6 +1,9 @@
 # Factoría SDD · Naturgy Builder
 
-**Versión:** v1.2 · **Estado:** especificación con knowledge base
+**Versión:** v1.3 · **Estado:** especificación + webapp funcional
+
+> **Novedad v1.3:** webapp Next.js en `webapp/` con 8 páginas (Dashboard, Procesos, Builder live, Módulos, Agentes, Prototyping, Costes, Auto-mejora).
+> Arranque: `cd webapp && npm install && npm run dev` → http://localhost:3030
 
 Sistema multi-agente que transforma ideas de negocio en aplicaciones funcionales, ejecutado localmente con Claude Code CLI. Diseña, construye, audita, despliega y se mejora a sí mismo con cada proyecto.
 
@@ -23,6 +26,10 @@ Factoria SDD/
 │   ├── RETROSPECTIVE-TEMPLATE.md
 │   └── PROJECT-CLAUDE-TEMPLATE.md     Para cascada de instancias
 ├── playbooks/                   5 recetas multi-agente reutilizables
+├── webapp/                      Webapp Next.js de la Factoría (v1.3)
+│   ├── app/                           8 páginas: dashboard, procesos, builder, ...
+│   ├── components/                    Sidebar, Topbar, Card, Button, Badge, Progress
+│   └── lib/                           Data mock + utilidades
 └── docs/                        QUICKSTART y documentación
 ```
 

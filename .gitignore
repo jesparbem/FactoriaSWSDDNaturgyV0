@@ -35,6 +35,9 @@ tmp/
 node_modules/
 dist/
 build/
+.next/
+out/
+next-env.d.ts
 __pycache__/
 *.pyc
 .venv/

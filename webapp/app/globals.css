@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Modo claro */
+  --bg: 250 250 250;
+  --fg: 12 53 91;             /* azul Naturgy oscuro */
+  --muted: 244 244 245;
+  --muted-fg: 82 82 91;
+  --card: 255 255 255;
+  --card-fg: 12 53 91;
+  --border: 228 228 231;
+  --ring: 255 103 27;         /* naranja Naturgy */
+  --accent: 255 103 27;
+}
+
+.dark {
+  /* Modo oscuro — azul Naturgy profundo */
+  --bg: 8 36 63;              /* naturgy-blue-950 */
+  --fg: 244 244 245;
+  --muted: 12 53 91;          /* naturgy-blue-900 */
+  --muted-fg: 161 161 170;
+  --card: 10 61 108;          /* naturgy-blue-800 */
+  --card-fg: 244 244 245;
+  --border: 63 63 70;
+  --ring: 255 103 27;
+  --accent: 255 122 61;        /* naranja más claro en oscuro */
+}
+
+* {
+  border-color: rgb(var(--border));
+}
+
+html, body {
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar Naturgy */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgb(var(--muted));
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--border));
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--accent));
+}
+
+/* Utilidades extra */
+.grid-bg {
+  background-image:
+    linear-gradient(rgb(var(--border) / 0.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--border) / 0.4) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.gradient-orange {
+  background: linear-gradient(135deg, #FF671B 0%, #FF7A3D 100%);
+}
+.gradient-blue {
+  background: linear-gradient(135deg, #0C355B 0%, #0066B3 100%);
+}
+.gradient-card {
+  background: linear-gradient(135deg, rgb(var(--card)) 0%, rgb(var(--muted)) 100%);
+}
+
+.text-gradient-orange {
+  background: linear-gradient(135deg, #FF671B 0%, #FF7A3D 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--muted)) 0%,
+    rgb(var(--card)) 50%,
+    rgb(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.5s linear infinite;
+}
+
+/* Tipografía */
+h1 { @apply tracking-tight; }
+h2 { @apply tracking-tight; }
+
+/* Estado de "agent thinking" — punto pulsante naranja */
+.agent-pulse {
+  position: relative;
+}
+.agent-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgb(var(--accent));
+  animation: pulse-glow 2s ease-out infinite;
+}
