@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Zap, Sparkles, Plus, Mic, Box, ArrowRight, Star, Wand2, Layers, Eye, Send } from "lucide-react";
+import { Zap, Sparkles, Plus, Box, ArrowRight, Star, Wand2, Layers, Eye, Send } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { PROTOTYPES } from "@/lib/data";
+import { VoiceInput } from "@/components/VoiceInput";
+import { useToast } from "@/components/ToastProvider";
 
 const SUGGESTED_PROMPTS = [
   "App para que el técnico de campo lea contadores con la cámara y suba la foto + lectura",
@@ -17,6 +19,7 @@ const SUGGESTED_PROMPTS = [
 export default function PrototypingPage() {
   const [prompt, setPrompt] = useState("");
   const [building, setBuilding] = useState(false);
+  const toast = useToast();
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -58,12 +61,9 @@ export default function PrototypingPage() {
               placeholder="Ejemplo: una app para que el técnico de campo apunte qué ha hecho en cada orden de trabajo. Lista de OTs por la mañana, formulario simple por OT (estado, materiales, foto, firma), envío al final del día. Datos demo para 3 técnicos y 12 OTs."
               className="w-full min-h-[160px] p-4 pr-14 rounded-xl border border-border bg-bg text-sm placeholder:text-muted-fg focus:outline-none focus:ring-2 focus:ring-ring resize-y"
             />
-            <button
-              title="Dictar"
-              className="absolute top-3 right-3 h-9 w-9 rounded-md bg-card border border-border hover:border-naturgy-orange-500 transition-all flex items-center justify-center"
-            >
-              <Mic className="w-4 h-4 text-naturgy-orange-500" />
-            </button>
+            <div className="absolute top-3 right-3">
+              <VoiceInput value={prompt} onChange={setPrompt} title="Dictar idea de prototipo" />
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -90,7 +90,19 @@ export default function PrototypingPage() {
               disabled={!prompt.trim() || building}
               onClick={() => {
                 setBuilding(true);
-                setTimeout(() => setBuilding(false), 3500);
+                toast({
+                  kind: "info",
+                  title: "Vibe Coding lanzado",
+                  description: "Layout · componentes · datos demo · preview en sandbox",
+                });
+                setTimeout(() => {
+                  setBuilding(false);
+                  toast({
+                    kind: "success",
+                    title: "Prototipo listo",
+                    description: "Disponible en la galería · revísalo y promueve a módulo si te encaja",
+                  });
+                }, 3500);
               }}
             >
               {building ? (

@@ -1,24 +1,70 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, Cpu, Cloud, GitPullRequest, Box, Terminal, Zap, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  Activity, Cpu, Cloud, GitPullRequest, Box, Terminal, Zap, Loader2,
+  CheckCircle2, RefreshCw, Pause, Play,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
 import { SWARM_PODS, BUILD_EVENTS, AGENTS } from "@/lib/data";
+import { useToast } from "@/components/ToastProvider";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 
-export default function BuilderPage() {
-  const [tick, setTick] = useState(0);
-  // Tick para que el progreso se sienta vivo
-  useEffect(() => {
-    const i = setInterval(() => setTick((t) => t + 1), 1500);
-    return () => clearInterval(i);
-  }, []);
+interface SwarmSnapshot {
+  ts: string;
+  pods: typeof SWARM_PODS;
+  events: typeof BUILD_EVENTS;
+  summary: {
+    activePods: number;
+    totalCostToday: number;
+    tokensToday: number;
+    callsToday: number;
+  };
+}
 
-  const totalCostUsd = SWARM_PODS.reduce((s, p) => s + p.costUsd, 0);
-  const totalTokens = SWARM_PODS.reduce((s, p) => s + p.tokens, 0);
+export default function BuilderPage() {
+  const toast = useToast();
+  const [snapshot, setSnapshot] = useState<SwarmSnapshot | null>(null);
+  const [polling, setPolling] = useState(true);
+  const [lastFetch, setLastFetch] = useState<Date>(new Date());
+
+  // Poll /api/swarm cada 3s
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const res = await fetch("/api/swarm", { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = (await res.json()) as SwarmSnapshot;
+        if (!cancelled) {
+          setSnapshot(data);
+          setLastFetch(new Date());
+        }
+      } catch {
+        // si falla la red no rompemos la página — seguimos con mock
+      }
+    };
+    tick();
+    if (!polling) return;
+    const id = setInterval(tick, 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [polling]);
+
+  const pods = snapshot?.pods ?? SWARM_PODS;
+  const events = snapshot?.events ?? BUILD_EVENTS;
+  const summary = snapshot?.summary ?? {
+    activePods: pods.filter((p) => p.status !== "done").length,
+    totalCostToday: AGENTS.reduce((s, a) => s + a.callsToday * a.costPerCall, 0),
+    tokensToday: pods.reduce((s, p) => s + p.tokens, 0),
+    callsToday: AGENTS.reduce((s, a) => s + a.callsToday, 0),
+  };
+  const totalCostUsd = pods.reduce((s, p) => s + p.costUsd, 0);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -29,7 +75,10 @@ export default function BuilderPage() {
             <Badge variant="primary">Live</Badge>
             <span className="flex items-center gap-1.5 text-xs text-naturgy-success">
               <span className="w-1.5 h-1.5 rounded-full bg-naturgy-success animate-pulse" />
-              Enjambre AKS operativo
+              Enjambre AKS · refresh cada 3s
+            </span>
+            <span className="text-[10px] text-muted-fg font-mono">
+              Última actualización: {lastFetch.toLocaleTimeString("es-ES")}
             </span>
           </div>
           <h1 className="text-2xl font-bold">Builder · Enjambre de agentes</h1>
@@ -38,8 +87,32 @@ export default function BuilderPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setPolling((p) => !p);
+              toast({
+                kind: polling ? "info" : "success",
+                title: polling ? "Auto-refresh pausado" : "Auto-refresh reanudado",
+                description: polling ? "La pantalla deja de actualizarse cada 3s" : "Volvemos a tirar de /api/swarm",
+              });
+            }}
+          >
+            {polling ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            {polling ? "Pausar" : "Reanudar"}
+          </Button>
           <Button variant="secondary"><Terminal className="w-4 h-4" /> Ver logs</Button>
-          <Button><Zap className="w-4 h-4" /> Lanzar nuevo enjambre</Button>
+          <Button
+            onClick={() =>
+              toast({
+                kind: "success",
+                title: "Enjambre lanzado",
+                description: "5 pods en cola · KEDA escalará según prioridad",
+              })
+            }
+          >
+            <Zap className="w-4 h-4" /> Lanzar nuevo enjambre
+          </Button>
         </div>
       </div>
 
@@ -80,8 +153,8 @@ export default function BuilderPage() {
 
       {/* Swarm stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatBox icon={<Box />} label="Pods activos" value={SWARM_PODS.filter(p => p.status !== "done").length.toString()} />
-        <StatBox icon={<Activity />} label="Tokens consumidos" value={formatNumber(totalTokens)} />
+        <StatBox icon={<Box />} label="Pods activos" value={summary.activePods.toString()} />
+        <StatBox icon={<Activity />} label="Tokens consumidos" value={formatNumber(summary.tokensToday)} />
         <StatBox icon={<Zap />} label="Coste AI Foundry" value={`$${totalCostUsd.toFixed(2)}`} subtitle="Modelos: claude-opus-4-7" />
         <StatBox icon={<GitPullRequest />} label="PRs abiertos hoy" value="7" subtitle="3 en review · 2 merged" />
       </div>
@@ -92,18 +165,20 @@ export default function BuilderPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Pods en vivo</CardTitle>
-              <Badge variant="ghost">{SWARM_PODS.length} workers</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="ghost">{pods.length} workers</Badge>
+                {polling && <RefreshCw className="w-3 h-3 text-naturgy-orange-500 animate-spin" />}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {SWARM_PODS.map((pod) => {
+            {pods.map((pod) => {
               const agent = AGENTS.find((a) => a.id === pod.agent);
-              const dynProgress =
-                pod.status === "done" || pod.status === "delivering"
-                  ? pod.progress
-                  : Math.min(99, pod.progress + ((tick * 2) % 6));
               return (
-                <div key={pod.id} className="rounded-lg border border-border bg-bg p-4 hover:border-naturgy-orange-500 transition-all">
+                <div
+                  key={pod.id}
+                  className="rounded-lg border border-border bg-bg p-4 hover:border-naturgy-orange-500 transition-all"
+                >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-naturgy-orange-500/10 flex items-center justify-center font-mono text-xs">
                       {pod.id.slice(-3)}
@@ -114,14 +189,15 @@ export default function BuilderPage() {
                         <span className="font-mono text-xs text-muted-fg truncate">{pod.spec}</span>
                       </div>
                       <div className="text-[11px] text-muted-fg mt-0.5">
-                        pod-id: <span className="font-mono">{pod.id}</span> · {pod.durationS}s · {formatNumber(pod.tokens)} tokens · ${pod.costUsd.toFixed(2)}
+                        pod-id: <span className="font-mono">{pod.id}</span> · {pod.durationS}s ·{" "}
+                        {formatNumber(pod.tokens)} tokens · ${pod.costUsd.toFixed(2)}
                       </div>
                     </div>
                     <StatusBadge status={pod.status} />
                   </div>
                   <div className="flex items-center gap-3">
-                    <Progress value={dynProgress} className="flex-1" />
-                    <span className="text-xs font-mono text-muted-fg shrink-0 w-10 text-right">{dynProgress}%</span>
+                    <Progress value={pod.progress} className="flex-1" />
+                    <span className="text-xs font-mono text-muted-fg shrink-0 w-10 text-right">{pod.progress}%</span>
                   </div>
                 </div>
               );
@@ -140,14 +216,20 @@ export default function BuilderPage() {
           </CardHeader>
           <CardContent>
             <div className="rounded-md bg-naturgy-blue-950 border border-border p-3 font-mono text-[10px] leading-relaxed max-h-[400px] overflow-y-auto space-y-2">
-              {BUILD_EVENTS.slice(0, 8).map((e) => (
-                <div key={e.id} className="text-naturgy-neutral-300">
+              {events.slice(0, 10).map((e) => (
+                <div key={e.id} className="text-naturgy-neutral-300 animate-fade-in">
                   <span className="text-naturgy-neutral-400">[{e.ts}]</span>{" "}
-                  <span className={
-                    e.status === "running" ? "text-naturgy-orange-400" :
-                    e.status === "ok" ? "text-green-400" :
-                    e.status === "warning" ? "text-yellow-400" : "text-red-400"
-                  }>
+                  <span
+                    className={
+                      e.status === "running"
+                        ? "text-naturgy-orange-400"
+                        : e.status === "ok"
+                        ? "text-green-400"
+                        : e.status === "warning"
+                        ? "text-yellow-400"
+                        : "text-red-400"
+                    }
+                  >
                     [{e.status.toUpperCase()}]
                   </span>{" "}
                   <span className="text-naturgy-orange-500">@{e.agent}</span>{" "}
@@ -164,7 +246,9 @@ export default function BuilderPage() {
       <Card>
         <CardHeader>
           <CardTitle>Guardarrailes del worker</CardTitle>
-          <p className="text-sm text-muted-fg mt-1">Cinco palancas del Agent SDK · cada decisión queda auditada con spec_id</p>
+          <p className="text-sm text-muted-fg mt-1">
+            Cinco palancas del Agent SDK · cada decisión queda auditada con spec_id
+          </p>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -192,7 +276,11 @@ export default function BuilderPage() {
   );
 }
 
-function ArchBox({ title, subtitle, desc, tone, pulse }: { title: string; subtitle: string; desc: string; tone: "blue" | "orange"; pulse?: boolean }) {
+function ArchBox({
+  title, subtitle, desc, tone, pulse,
+}: {
+  title: string; subtitle: string; desc: string; tone: "blue" | "orange"; pulse?: boolean;
+}) {
   const toneCls = tone === "blue"
     ? "border-naturgy-blue-500/40 bg-naturgy-blue-500/5"
     : "border-naturgy-orange-500/40 bg-naturgy-orange-500/5";
@@ -214,7 +302,11 @@ function ArchArrow({ label }: { label: string }) {
   );
 }
 
-function StatBox({ icon, label, value, subtitle }: { icon: React.ReactNode; label: string; value: string; subtitle?: string }) {
+function StatBox({
+  icon, label, value, subtitle,
+}: {
+  icon: React.ReactNode; label: string; value: string; subtitle?: string;
+}) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -240,5 +332,10 @@ function StatusBadge({ status }: { status: "init" | "building" | "delivering" | 
     error: { variant: "danger", icon: null, label: "error" },
   } as const;
   const c = config[status];
-  return <Badge variant={c.variant as "ghost" | "primary" | "warning" | "success" | "danger"}>{c.icon}{c.label}</Badge>;
+  return (
+    <Badge variant={c.variant as "ghost" | "primary" | "warning" | "success" | "danger"}>
+      {c.icon}
+      {c.label}
+    </Badge>
+  );
 }

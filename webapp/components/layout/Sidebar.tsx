@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Workflow, Boxes, Bot, Cpu, Sparkles,
-  Coins, TrendingUp, Settings, Zap,
+  Coins, TrendingUp, Settings, Zap, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, group: "main" },
+  { href: "/equipo", label: "Equipo · Roles", icon: Users, group: "main" },
   { href: "/procesos", label: "Procesos de Negocio", icon: Workflow, group: "build" },
   { href: "/builder", label: "Builder · Enjambre", icon: Cpu, group: "build", live: true },
   { href: "/modulos", label: "Módulos", icon: Boxes, group: "build" },

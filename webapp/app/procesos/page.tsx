@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SPECS_EXTRACTION_METHODS } from "@/lib/data";
+import { VoiceInput } from "@/components/VoiceInput";
+import { useToast } from "@/components/ToastProvider";
 
 const iconMap = { Search, Paintbrush, Users } as const;
 
@@ -134,6 +136,8 @@ export default function ProcesosPage() {
 // --- Flow 3: Process detailed + AI (con dictado) ---
 function ProcessDetailedFlow({ step, setStep, onBack }: { step: number; setStep: (n: number) => void; onBack: () => void }) {
   const steps = ["Describe", "IA analiza", "Specs extraídas", "Mapeo a entidades"];
+  const [text, setText] = useState("");
+  const toast = useToast();
   return (
     <Card>
       <CardHeader>
@@ -166,27 +170,34 @@ function ProcessDetailedFlow({ step, setStep, onBack }: { step: number; setStep:
           <div className="space-y-4">
             <div className="relative">
               <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
                 placeholder="Ejemplo: Quiero un proceso para que cualquier empleado pueda solicitar una compra de hasta 50.000€. Debe pasar por aprobación del jefe directo, validación del responsable de presupuesto del departamento, y finalmente enviarse a SAP MM para crear el pedido. Si el importe es >10k€, debe pasar también por compliance..."
-                className="w-full min-h-[200px] p-4 pr-12 rounded-lg border border-border bg-bg text-sm placeholder:text-muted-fg focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+                className="w-full min-h-[200px] p-4 pr-14 rounded-lg border border-border bg-bg text-sm placeholder:text-muted-fg focus:outline-none focus:ring-2 focus:ring-ring resize-y"
               />
-              <button
-                title="Dictado por voz (SDD)"
-                className="absolute top-3 right-3 h-9 w-9 rounded-md bg-card border border-border hover:border-naturgy-orange-500 transition-all flex items-center justify-center group"
-              >
-                <Mic className="w-4 h-4 text-naturgy-orange-500 group-hover:scale-110 transition-transform" />
-              </button>
+              <div className="absolute top-3 right-3">
+                <VoiceInput value={text} onChange={setText} title="Dictar proceso (es-ES)" />
+              </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Button variant="secondary" size="sm">
                 <Upload className="w-3.5 h-3.5" /> Adjuntar documento
               </Button>
-              <Button variant="secondary" size="sm">
-                <Mic className="w-3.5 h-3.5" /> Dictar (es-ES)
-              </Button>
-              <Badge variant="ghost" className="ml-auto">Auto-guardado · borrador</Badge>
+              <Badge variant="ghost" className="ml-auto">{text.length} caracteres · auto-guardado</Badge>
             </div>
             <div className="flex justify-end">
-              <Button onClick={() => setStep(1)}>
+              <Button
+                disabled={!text.trim()}
+                onClick={() => {
+                  setStep(1);
+                  toast({
+                    kind: "info",
+                    title: "@architect analizando",
+                    description: "Identificando actores, fases, entidades e integraciones...",
+                  });
+                  setTimeout(() => setStep(2), 3000);
+                }}
+              >
                 <Sparkles className="w-4 h-4" /> Analizar con IA
               </Button>
             </div>
@@ -278,7 +289,16 @@ acceptance_criteria:
               <Button variant="secondary" onClick={() => setStep(0)}>
                 ← Editar proceso
               </Button>
-              <Button onClick={() => setStep(3)}>
+              <Button
+                onClick={() => {
+                  setStep(3);
+                  toast({
+                    kind: "success",
+                    title: "Specs publicadas en GitHub",
+                    description: "SPEC-2026-0142 versionada · evento spec.ready enviado al orquestador",
+                  });
+                }}
+              >
                 Continuar al mapeo de entidades <ArrowRight className="w-4 h-4" />
               </Button>
             </div>

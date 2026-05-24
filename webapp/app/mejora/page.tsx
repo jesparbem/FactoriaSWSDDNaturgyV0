@@ -3,12 +3,14 @@
 import { useState } from "react";
 import {
   Sparkles, ArrowUp, ArrowDown, MessageSquare, CheckCircle2, X,
-  TrendingUp, Lightbulb, Send, Mic, ChevronRight,
+  TrendingUp, Lightbulb, Send, ChevronRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SUGGESTIONS, ROLES } from "@/lib/data";
+import { VoiceInput } from "@/components/VoiceInput";
+import { useToast } from "@/components/ToastProvider";
 
 const STATUS_VARIANT = {
   proposed: "ghost",
@@ -21,6 +23,7 @@ export default function MejoraPage() {
   const [selected, setSelected] = useState<string | null>(SUGGESTIONS[0].id);
   const current = SUGGESTIONS.find((s) => s.id === selected) || SUGGESTIONS[0];
   const [feedback, setFeedback] = useState("");
+  const toast = useToast();
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -107,10 +110,19 @@ export default function MejoraPage() {
               rows={3}
             />
             <div className="flex justify-between mt-2">
-              <button className="h-7 w-7 rounded-md hover:bg-card flex items-center justify-center">
-                <Mic className="w-3.5 h-3.5 text-naturgy-orange-500" />
-              </button>
-              <Button size="sm" disabled={!feedback.trim()}>
+              <VoiceInput value={feedback} onChange={setFeedback} size="sm" title="Dictar feedback" />
+              <Button
+                size="sm"
+                disabled={!feedback.trim()}
+                onClick={() => {
+                  toast({
+                    kind: "success",
+                    title: "Feedback enviado",
+                    description: "@self-improve lo cruzará con histórico y propondrá una sugerencia si encaja",
+                  });
+                  setFeedback("");
+                }}
+              >
                 <Send className="w-3 h-3" /> Enviar
               </Button>
             </div>
@@ -132,16 +144,44 @@ export default function MejoraPage() {
                 <div className="flex gap-2">
                   {current.status === "proposed" && (
                     <>
-                      <Button variant="secondary" size="sm">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() =>
+                          toast({
+                            kind: "info",
+                            title: "Sugerencia rechazada",
+                            description: `${current.id} archivada con motivo`,
+                          })
+                        }
+                      >
                         <X className="w-3.5 h-3.5" /> Rechazar
                       </Button>
-                      <Button size="sm">
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          toast({
+                            kind: "success",
+                            title: "Sugerencia aprobada",
+                            description: `${current.id} pasa al backlog · @self-improve preparará diff`,
+                          })
+                        }
+                      >
                         <CheckCircle2 className="w-3.5 h-3.5" /> Aprobar
                       </Button>
                     </>
                   )}
                   {current.status === "approved" && (
-                    <Button size="sm">
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        toast({
+                          kind: "success",
+                          title: "Aplicando mejora",
+                          description: "Commit en .skills/ con diff propuesto · push tras tu visto bueno",
+                        })
+                      }
+                    >
                       <Sparkles className="w-3.5 h-3.5" /> Aplicar ahora
                     </Button>
                   )}

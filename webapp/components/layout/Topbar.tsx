@@ -1,8 +1,10 @@
 "use client";
 
-import { Search, Bell, Mic, Sun, Moon } from "lucide-react";
+import { Search, Bell, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { VoiceInput } from "@/components/VoiceInput";
+import { useTheme } from "@/components/ToastProvider";
 
 const ROLES = [
   { id: "process-owner", label: "Process Owner", color: "bg-naturgy-blue-500" },
@@ -13,7 +15,8 @@ const ROLES = [
 
 export function Topbar() {
   const [role, setRole] = useState("product-owner");
-  const [dark, setDark] = useState(true);
+  const [query, setQuery] = useState("");
+  const { dark, toggle: toggleTheme } = useTheme();
 
   return (
     <header className="h-16 border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-30 flex items-center px-6 lg:px-8 gap-4">
@@ -22,15 +25,14 @@ export function Topbar() {
         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-fg" />
         <input
           type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
           placeholder='Describe tu proceso o pide "Constrúyelo ya..."'
           className="w-full h-10 pl-10 pr-12 rounded-lg bg-muted border border-border text-sm placeholder:text-muted-fg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
         />
-        <button
-          className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-md hover:bg-card transition-colors flex items-center justify-center"
-          title="Dictado por voz (SDD)"
-        >
-          <Mic className="w-4 h-4 text-naturgy-orange-500" />
-        </button>
+        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+          <VoiceInput value={query} onChange={setQuery} size="sm" title="Dictar búsqueda (SDD)" />
+        </div>
       </div>
 
       {/* Role switcher */}
@@ -55,12 +57,9 @@ export function Topbar() {
       {/* Notifications + theme + user */}
       <div className="flex items-center gap-2">
         <button
-          onClick={() => {
-            setDark(!dark);
-            document.documentElement.classList.toggle("dark");
-          }}
+          onClick={toggleTheme}
           className="h-9 w-9 rounded-md hover:bg-muted transition-colors flex items-center justify-center"
-          title="Cambiar tema"
+          title="Cambiar tema (persistente)"
         >
           {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
