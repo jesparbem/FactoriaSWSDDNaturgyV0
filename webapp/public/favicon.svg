@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Fondo azul Naturgy con esquinas redondeadas -->
+  <rect width="64" height="64" rx="12" fill="#003B71"/>
+  <!-- Letra F en blanco -->
+  <path d="M20 14h22v9H29v8h11v9H29v10H20V14z" fill="#FFFFFF"/>
+  <!-- Acento naranja Naturgy en la esquina (mariposa simplificada) -->
+  <path d="M48 14l8 4-4 8-8-4 4-8z" fill="#FF671B"/>
+</svg>
